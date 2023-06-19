@@ -84,4 +84,6 @@ const getUserById = async(req,res,next)=>{
     })
 }
 
+
+
 module.exports = {loginUser,registerUser,authUser,getUserById}

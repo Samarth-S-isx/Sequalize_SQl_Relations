@@ -19,7 +19,7 @@ const db={}
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 db.user = require('./user')(sequelize,DataTypes)
-
+db.image = require('./image')(sequelize,DataTypes)
 
 sequelize.sync({force:false})
 
