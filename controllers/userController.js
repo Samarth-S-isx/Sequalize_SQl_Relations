@@ -13,7 +13,7 @@ const loginUser=async(req,res,next)=>{
     if(!currentUser){
         const error = new Error("User does not exists go to localhost:3000/register");error.code=404;return next(error)
     }
-    const otp = otpGenerator.generate(6, { alphabets:false, upperCase: false, specialChars: false,digits:true });
+    const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false ,lowerCaseAlphabets:false});
 
     try {
         currentUser.otp = otp;
@@ -61,7 +61,7 @@ const registerUser = async(req,res,next)=>{
     }catch(e){
         const error = new Error(e);error.code=404;return next(error)
     }
-    const otp = otpGenerator.generate(6, { alphabets:false, upperCase: false, specialChars: false,digits:true });
+    const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false ,lowerCaseAlphabets:false});
 
     try {
         createdUser.otp = otp;
