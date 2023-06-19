@@ -1,63 +1,87 @@
 const db = require('../models/connection')
+const otpGenerator = require('otp-generator');
 const User = db.user
-const Contact = db.contact
-const Order = db.order
-const Book = db.book
-const joinTable = db.join_table
-const createAUser=async(req,res)=>{
-    const newUser = await User.create({ firstName: "Jane",lastName:"Maria" })
+
+const loginUser=async(req,res,next)=>{
+    const {number} = req.body;
+    let currentUser;
+    try{
+        currentUser = await User.findOne({ where: { mobile_number: number } });
+    }catch(e){
+
+    }
+    if(!currentUser){
+        const error = new Error("User does not exists go to localhost:3000/register");error.code=404;return next(error)
+    }
+    const otp = otpGenerator.generate(6, { alphabets:false, upperCase: false, specialChars: false,digits:true });
+
+    try {
+        currentUser.otp = otp;
+        await currentUser.save();
+    } catch (e) {
+
+    }
     res.json({
-        newUser
+        currentUser,
+        message:"Go to localhost:3000/auth to check otp"
+    });
+}
+
+const authUser =  async(req,res,next)=>{
+    const {number,otp} = req.body;
+    let currentUser;
+    try{
+        currentUser = await User.findOne({ where: { mobile_number: number } });
+    }catch(e){
+
+    }
+    if(currentUser.otp!==otp){
+        const error = new Error("Otp not correct");error.code=404;return next(error)
+    }
+    try{
+        currentUser.otp=null;
+        await currentUser.save();
+    }catch(e){
+
+    }
+    const token = currentUser.getJwtToken()
+    console.log(token)
+    res.json({
+        message:"Succesfully Logged In",
+        token
     })
 }
 
-const oneToOne = async(req,res)=>{
-    // var data = await User.create({firstName:"X",lastName:"Y"})
-    // if(data && data.id){
-    //     await Contact.create({address1:"M",address2:"N",user_id:data.id})
-    // }
-    var data = await User.findAll({
-        include:Contact
-    })
+const registerUser = async(req,res,next)=>{
+    const{name,number} = req.body;
+    // console.log(req.body);
+    let createdUser;
+    try{
+        createdUser = await User.create({mobile_number:number,name:name});
+    }catch(e){
+        const error = new Error(e);error.code=404;return next(error)
+    }
+    const otp = otpGenerator.generate(6, { alphabets:false, upperCase: false, specialChars: false,digits:true });
 
+    try {
+        createdUser.otp = otp;
+        await createdUser.save();
+    } catch (e) {
 
+    }
     res.json({
-        data:data
+        createdUser,
+        message:"Go to localhost:3000/auth to check otp"
     })
 }
 
 
-const oneToMany = async(req,res)=>{
-    // var data = await Order.create({productName:"P2",description:"D2",user_id:1})
-    var data = await User.findAll({
-        include:Order
-    })
+const getUserById = async(req,res,next)=>{
+    const id = req.params.id
+    const user = await User.findByPk(id);
     res.json({
-        data:data
+        user
     })
 }
 
-const manyToMany=async(req,res)=>{  
-    // var data_user = await User.create({firstName:"U1",lastName:"U2"})
-    // var data_book = await Book.create({name:"N1",author:"A1"})
-    // var data_user = await User.create({firstName:"U2",lastName:"U4"})
-    // var data_book = await Book.create({name:"N2",author:"A2"})
-    // var join_table_data = await joinTable.create({user_Id:data_user.id,book_Id:data_book.id})
-
-    // const user = await User.findByPk(2);
-    // const book = await Book.findByPk(1);
-    // var join_table_data = await joinTable.create({user_Id:user.id,book_Id:book.id})
-
-    // var data = await User.findAll({
-    //     include:Book
-    // })
-    var data = await Book.findAll({
-        include:User
-    })
-
-    res.json({
-        data
-    })
-}
-
-module.exports = {createAUser,oneToOne,oneToMany,manyToMany}
+module.exports = {loginUser,registerUser,authUser,getUserById}
