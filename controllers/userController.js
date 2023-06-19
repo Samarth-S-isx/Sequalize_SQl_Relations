@@ -8,7 +8,7 @@ const loginUser=async(req,res,next)=>{
     try{
         currentUser = await User.findOne({ where: { mobile_number: number } });
     }catch(e){
-
+        const error = new Error("Internal Server Error");error.code=500;return next(error)
     }
     if(!currentUser){
         const error = new Error("User does not exists go to localhost:3000/register");error.code=404;return next(error)
@@ -19,7 +19,7 @@ const loginUser=async(req,res,next)=>{
         currentUser.otp = otp;
         await currentUser.save();
     } catch (e) {
-
+        const error = new Error("Internal Server Error");error.code=500;return next(error)
     }
     res.json({
         currentUser,
@@ -33,7 +33,7 @@ const authUser =  async(req,res,next)=>{
     try{
         currentUser = await User.findOne({ where: { mobile_number: number } });
     }catch(e){
-
+        const error = new Error("Internal Server Error");error.code=500;return next(error)
     }
     if(currentUser.otp!==otp){
         const error = new Error("Otp not correct");error.code=404;return next(error)
@@ -42,7 +42,7 @@ const authUser =  async(req,res,next)=>{
         currentUser.otp=null;
         await currentUser.save();
     }catch(e){
-
+        const error = new Error("Internal Server Error");error.code=500;return next(error)
     }
     const token = currentUser.getJwtToken()
     console.log(token)
